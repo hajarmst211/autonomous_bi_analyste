@@ -11,11 +11,17 @@ engine = create_engine(DB_URL)
 def get_db_connection():
     return engine.connect()
 
-def run_query(query: str):
-
-    with engine.connect() as connection:
-        result = connection.execute(text(query))
-        return [dict(row._mapping) for row in result]
+def execute_query(query: str):
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text(query))
+            if result.returns_rows:
+                return {"data":[dict(row._mapping) for row in result], "error":None}
+            else:
+                return {"data":f"Success: {result.rowcount} rows affected", "error": None} 
+            
+    except Exception as err:
+        return {"data":None, "error":str(err)}
     
 
 def get_schema_details():
@@ -29,3 +35,12 @@ def get_schema_details():
         schema_output.append(f"Table: {table}:Columns: {', '.join(col_desc)}")
 
     return schema_output
+
+
+def test_query(query:str):
+    response = execute_query(query)
+
+    if response["data"] == None:
+        return response["error"]
+    
+    return None

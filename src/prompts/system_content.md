@@ -7,6 +7,6 @@ Database Schema:
 {schema}
 
 Rules:
-1. Only return the SQL code. No preamble.
+1. Only return the SQL code. No preamble. Strinctly dont write anything before or after, **just the query**
 2. Use LIMIT 100 unless specified.
 3. Use only the tables provided in the schema.
