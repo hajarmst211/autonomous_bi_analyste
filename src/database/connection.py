@@ -18,6 +18,7 @@ def execute_query(query: str):
             if result.returns_rows:
                 return {"data":[dict(row._mapping) for row in result], "error":None}
             else:
+                connection.commit()
                 return {"data":f"Success: {result.rowcount} rows affected", "error": None} 
             
     except Exception as err:

@@ -4,9 +4,10 @@ import os
 from dotenv import load_dotenv
 import sys
 import re
+import time
 from google import genai
 from database.connection import get_schema_details, execute_query, check_with_explain
-from google.genai import types
+from google.genai import types, errors
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 load_dotenv()
@@ -59,29 +60,43 @@ def get_answer_from_ai(user_question:str, max_retries = 4):
     attempts = 0
 
     while attempts < max_retries:
-        sql_query = generate_sql(user_question)
-        explain_result = check_with_explain(sql_query)
+        try:
+            sql_query = generate_sql(user_question, error_history)
+            explain_result = check_with_explain(sql_query)
 
-        if explain_result != None:
-            error_history[user_question] = explain_result
-            attempts += 1
-            continue
+            if explain_result != None:
+                error_history[user_question] = explain_result
+                attempts += 1
+                continue
 
-        execution_result = execute_query(sql_query)
-        if execution_result["error"] != None:
-            error_history[user_question] = execution_result
-            attempts =+ 1
+            execution_result = execute_query(sql_query)
+            if execution_result["error"] != None:
+                error_history[user_question] = execution_result
+                attempts =+ 1
+            
+            else:
+                return execution_result["data"]
         
-        else:
-            return execution_result["data"]
-    
-        return {"error": "Max retries reached. Could not generate a valid query.", "history": error_history}
 
+        except errors.ClientError as e:
+            if "429" in str(e):
+                print("Rate limit hit! Waiting 30 seconds...")
+                time.sleep(30) # Wait for the quota to reset
+            else:
+                return {"error": f"AI API Error: {str(e)}"}
+                
+    return {"error": "Max retries reached."}
 
 
 if __name__ == "__main__":
-    question = "Who are the top 5 customers by total spend?"
-    sql = generate_sql(question)
-    print(f"Generated SQL:\n{sql}")
+    question = "Show me the names of all products that cost more than 100 dollars"
+    
+    final_data = get_answer_from_ai(question)
+    
+    if isinstance(final_data, list):
+        for row in final_data:
+            print(row)
+    else:
+        print(final_data)
     
 
