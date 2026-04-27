@@ -37,10 +37,12 @@ def get_schema_details():
     return schema_output
 
 
-def test_query(query:str):
-    response = execute_query(query)
 
-    if response["data"] == None:
-        return response["error"]
-    
-    return None
+def check_with_explain(query: str):
+    explain_query = f"EXPLAIN {query}"
+    try:
+        with engine.connect() as connection:
+            connection.execute(text(explain_query))
+            return None 
+    except Exception as e:
+        return e
