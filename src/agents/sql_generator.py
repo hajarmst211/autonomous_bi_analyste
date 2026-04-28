@@ -52,6 +52,9 @@ def call_with_retry(func, max_retries=5):
 
 def generate_sql(client_question: str, error_history: list):
     question_number = 0
+    messages = [
+        {"role": "system", "content": system_prompt}
+    ]
     if error_history:
         client_question += " You previously made these mistakes:\n"
         for attempt, err in error_history:
@@ -111,7 +114,7 @@ def get_answer_from_ai(user_question:str, max_retries = 4):
         except errors.ClientError as e:
             if "429" in str(e):
                 print("Rate limit hit! Waiting 30 seconds...")
-                time.sleep(30) 
+                time.sleep(5) 
             else:
                 return {"error": f"AI API Error: {str(e)}"}
                 
