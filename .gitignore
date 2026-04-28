@@ -3,3 +3,5 @@
 notes.md
 ecommerce.db
 .env
+
+*__pycache__

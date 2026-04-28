@@ -38,7 +38,6 @@ def get_schema_details():
     return schema_output
 
 
-
 def check_with_explain(query: str):
     explain_query = f"EXPLAIN {query}"
     try:
@@ -47,3 +46,7 @@ def check_with_explain(query: str):
             return None 
     except Exception as e:
         return e
+    
+    
+def is_valid_sql(sql: str):
+    return sql.strip().endswith(";") and "select" in sql.lower()
