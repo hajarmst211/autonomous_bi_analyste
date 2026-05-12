@@ -13,3 +13,4 @@ Rules:
 4.  Make sure you respect the SQL syntaxes. 
 5. Add ";" at the end of each query 
 6. IMPORTANT: When using GROUP BY, always include the grouping column(s) in the SELECT statement so the results are identifiable. Always use descriptive aliases using the AS keyword.
+
