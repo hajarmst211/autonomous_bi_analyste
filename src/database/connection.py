@@ -48,5 +48,5 @@ def check_with_explain(query: str)-> Exception:
         return e
     
     
-def is_valid_sql(sql: str)_-> bool:
+def is_valid_sql(sql: str)-> bool:
     return sql.strip().endswith(";") and "select" in sql.lower()

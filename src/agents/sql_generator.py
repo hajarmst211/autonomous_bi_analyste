@@ -15,9 +15,10 @@ load_dotenv()
 
 llm = ChatOpenAI(
     openai_api_key=os.getenv("GROQ_API_KEY"),
-    openai_api_base="https://api.groq.com/openai/v1",
-    model_name="llama3-70b-8192",
-    temperature=0
+    base_url="https://api.groq.com/openai/v1",
+    model_name="llama-3.3-70b-versatile",
+    temperature=0,
+    timeout=60
 )
 
 current_dir = os.path.dirname(__file__)
@@ -54,15 +55,17 @@ def generate_sql(client_question: str, error_history: list):
     response = chain.invoke({"question": client_question})
     return strip_sql(response)
 
-def get_answer_from_ai(user_question: str, max_retries=4):
+def get_answer_from_ai(user_question: str, max_retries=10):
     error_history = []
     attempts = 0
 
     while attempts < max_retries:
         try:
+            print(f"Attempt {attempts + 1} to generate and execute SQL")
             sql_query = generate_sql(user_question, error_history)
-
+            print(f"Generated SQL Query:\n{sql_query}\n")
             if not is_valid_sql(sql_query):
+                print("Generated SQL is invalid or incomplete. Retrying...")
                 error_history.append((sql_query, "Incomplete or invalid SQL syntax"))
                 attempts += 1
                 continue
@@ -70,6 +73,7 @@ def get_answer_from_ai(user_question: str, max_retries=4):
             print(f"AI generated SQL. Now checking with EXPLAIN...")
             explain_result = check_with_explain(sql_query)
             if explain_result is not None:
+                print("EXPLAIN check failed. SQL is not valid or may cause issues.")
                 print(f"SQL failed EXPLAIN check: {explain_result}") 
                 error_history.append((sql_query, explain_result))
                 attempts += 1
@@ -77,9 +81,12 @@ def get_answer_from_ai(user_question: str, max_retries=4):
 
             execution_result = execute_query(sql_query)
             if execution_result.get("error"):
+                print("Checking the execution result for errors...")
                 error_history.append((sql_query, execution_result["error"]))
+                print("Execution error: ", execution_result["error"])
                 attempts += 1
             else:
+                print("SQL executed successfully!")
                 return execution_result["data"]
 
         except Exception as e:
