@@ -50,3 +50,25 @@ def check_with_explain(query: str)-> Exception:
     
 def is_valid_sql(sql: str)-> bool:
     return sql.strip().endswith(";") and "select" in sql.lower()
+
+
+def main():
+    execution_result = execute_query('''
+    SELECT SUM(T2.total_amount) AS total_sales
+    FROM customers AS T1
+    INNER JOIN orders AS T2
+    ON T1.id = T2.customer_id
+    WHERE T2.order_date >= DATE('now', '-1 month')
+    GROUP BY T1.region
+    ORDER BY total_sales DESC;
+     ''')
+    
+    if len(execution_result) == 0:
+        print("Error executing query: ", execution_result["error"])
+    else:
+        print(execution_result)
+
+    return 0
+
+if __name__ == "__main__":
+    main()

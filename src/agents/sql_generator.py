@@ -30,11 +30,13 @@ def get_system_instructions():
         prompt_content = f.read()
     return prompt_content.format(schema=schema_details)
 
+
 def strip_sql(raw: str) -> str:
     match = re.search(r"```(?:sql)?\n?(.*?)```", raw, re.DOTALL)
     raw = match.group(1) if match else raw
     raw = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", raw)
     return raw.strip()
+
 
 def generate_sql(client_question: str, error_history: list):
     system_prompt = get_system_instructions()
@@ -61,6 +63,7 @@ def get_answer_from_ai(user_question: str, max_retries=10):
 
     while attempts < max_retries:
         try:
+            print("-"*10)
             print(f"Attempt {attempts + 1} to generate and execute SQL")
             sql_query = generate_sql(user_question, error_history)
             print(f"Generated SQL Query:\n{sql_query}\n")
@@ -100,10 +103,12 @@ def get_answer_from_ai(user_question: str, max_retries=10):
     return {"error": "Max retries reached."}
 
 if __name__ == "__main__":
-    question = "Show me the names of all products that cost more than 100 dollars"
+    question = "Give me the total sales for each product category, sorted by total sales in descending order."
+    print(f"The question is:{question}")
     final_data = get_answer_from_ai(question)
-    
     if isinstance(final_data, list):
+        if len(final_data) == 0:
+            print("No data returned from the query.")
         for row in final_data:
             print(row)
     else:
