@@ -11,7 +11,7 @@ engine = create_engine(DB_URL)
 def get_db_connection():
     return engine.connect()
 
-def execute_query(query: str):
+def execute_query(query: str)-> dict:
     try:
         with engine.connect() as connection:
             result = connection.execute(text(query))
@@ -38,7 +38,7 @@ def get_schema_details():
     return schema_output
 
 
-def check_with_explain(query: str):
+def check_with_explain(query: str)-> Exception:
     explain_query = f"EXPLAIN {query}"
     try:
         with engine.connect() as connection:
@@ -48,5 +48,5 @@ def check_with_explain(query: str):
         return e
     
     
-def is_valid_sql(sql: str):
+def is_valid_sql(sql: str)_-> bool:
     return sql.strip().endswith(";") and "select" in sql.lower()
