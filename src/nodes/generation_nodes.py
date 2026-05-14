@@ -105,7 +105,8 @@ def format_agent_output(messages: list):
             
     print("\n" + "="*50)
 
-def execute_query(state: QueryAgentState):
+
+def execute_query_node(state: QueryAgentState):
     sql_query = state.get("sql_query", "")
 
 
@@ -114,5 +115,3 @@ def execute_query(state: QueryAgentState):
     
     result = execute_query(sql_query)
     return {"execution_result": result.get("data", []), "messages": [AIMessage(content=str(result))]}
-    
-    
