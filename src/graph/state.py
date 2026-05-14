@@ -1,7 +1,10 @@
-from typing import TypedDict, Annotated
+from typing import List, TypedDict, Annotated
 import operator
+from langchain_core.messages import BaseMessage
 
 class QueryAgentState(TypedDict):
+    messages: Annotated[List[BaseMessage], operator.add] 
+
     user_question: str
     error_history: Annotated[list[tuple[str, str]], operator.add]
     attempts: int

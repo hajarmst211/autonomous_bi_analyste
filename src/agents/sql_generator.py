@@ -3,15 +3,23 @@ from dotenv import load_dotenv
 import sys
 import re
 import time
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from config.llm_config import llm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from database.connection import get_schema_details, execute_query, check_with_explain, is_valid_sql
 
 load_dotenv()
+
+llm = ChatOpenAI(
+    openai_api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1",
+    model_name="llama-3.3-70b-versatile",
+    temperature=0,
+    timeout=60
+)
 
 current_dir = os.path.dirname(__file__)
 prompt_path = os.path.abspath(os.path.join(current_dir, "..", "prompts", "sql_generation_prompt.md"))
@@ -22,12 +30,12 @@ def get_system_instructions():
         prompt_content = f.read()
     return prompt_content.format(schema=schema_details)
 
-
 def strip_sql(raw: str) -> str:
     match = re.search(r"```(?:sql)?\n?(.*?)```", raw, re.DOTALL)
     raw = match.group(1) if match else raw
     raw = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", raw)
     return raw.strip()
+
 
 def simple_generate_sql(client_question: str):
     system_prompt = get_system_instructions()
@@ -43,7 +51,7 @@ def simple_generate_sql(client_question: str):
     return strip_sql(response)
 
 
-def generate_sql_with_retries(client_question: str, error_history: list):
+def generate_sql(client_question: str, error_history: list):
     system_prompt = get_system_instructions()
     
     if error_history:
@@ -68,7 +76,6 @@ def get_answer_from_ai(user_question: str, max_retries=10):
 
     while attempts < max_retries:
         try:
-            print("-"*10)
             print(f"Attempt {attempts + 1} to generate and execute SQL")
             sql_query = generate_sql(user_question, error_history)
             print(f"Generated SQL Query:\n{sql_query}\n")
@@ -108,12 +115,10 @@ def get_answer_from_ai(user_question: str, max_retries=10):
     return {"error": "Max retries reached."}
 
 if __name__ == "__main__":
-    question = "Give me the total sales for each product category, sorted by total sales in descending order."
-    print(f"The question is:{question}")
+    question = "Show me the names of all products"
     final_data = get_answer_from_ai(question)
+    
     if isinstance(final_data, list):
-        if len(final_data) == 0:
-            print("No data returned from the query.")
         for row in final_data:
             print(row)
     else:

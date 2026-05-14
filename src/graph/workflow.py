@@ -1,50 +1,38 @@
 # worklow.py
 
 from state import QueryAgentState
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, START, END
 from langgraph.types import RetryPolicy
+from langchain_core.messages import HumanMessage
 
-from nodes.db_nodes import get_db_schema_node, validate_sql_node
-
-from nodes.generation_nodes import get_system_instructions_node, generate_sql_node, execute_query_node
-
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from nodes.generation_nodes import get_schema_node, generate_query, format_agent_output, validate_query
 
 
 workflow = StateGraph(QueryAgentState)
 
+# Define the nodes
+workflow.add_node("get_schema", get_schema_node)
+workflow.add_node("generate_query", generate_query)
+workflow.add_node("validate_query", validate_query)
 
-# Add Nodes
-workflow.add_node("get_schema", get_db_schema_node)
-workflow.add_node("format_system_instructions", get_system_instructions_node)
-workflow.add_node("sql_generation",  generate_sql_node)
-workflow.add_node("validation",validate_sql_node )
-workflow.add_node("execute", execute_query_node)
+# Build the edges
+workflow.add_edge(START, "get_schema")
+workflow.add_edge("get_schema", "generate_query")
+workflow.add_edge("generate_query", "validate_query")
+workflow.add_edge("validate_query", END)
 
-# Entry Point
-workflow.set_entry_point("get_schema")
-
-# EDgesworkflow.add_edge("get_schema", "format_system_instructions")
-workflow.add_edge("format_system_instructions", "sql_generation")
-workflow.add_edge("sql_generation", "validation")
-
-# Add Conditional Logic after Validation
-workflow.add_conditional_edges(
-    "validate",
-    should_continue,
-    {
-        "retry": "generate",  
-        "end": "execute"      
-    }
-)
-
-workflow.add_conditional_edges(
-    "execute",
-    should_continue,
-    {
-        "retry": "generate",
-        "end": END
-    }
-)
-
-# Compile the Graph
 app = workflow.compile()
+
+
+inputs = {
+    "user_question": "How many employees are in London?",
+    "messages": [HumanMessage(content="How many employees are in London?")],
+    "attempts": 0
+}
+
+result = app.invoke(inputs)
+print(f"Generated SQL Query: {result['sql_query']}")
+print(f"Execution Result: {format_agent_output(result['messages'])}")
