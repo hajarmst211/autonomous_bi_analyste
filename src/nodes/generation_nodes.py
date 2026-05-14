@@ -74,7 +74,7 @@ def validate_query(state: QueryAgentState) -> bool:
                 additional_kwargs={"error_details": execution_error}
                 )) 
     
-    return state["messages"].append(AIMessage(content="The generated SQL query is valid and executed successfully.")) 
+    return {"is_query_valid": True}
 
 
 def format_agent_output(messages: list):
@@ -105,3 +105,14 @@ def format_agent_output(messages: list):
             
     print("\n" + "="*50)
 
+def execute_query(state: QueryAgentState):
+    sql_query = state.get("sql_query", "")
+
+
+    if state["is_query_valid"] is not True:
+        return state["messages"].append(AIMessage(content="The SQL query is not valid and cannot be executed.")) 
+    
+    result = execute_query(sql_query)
+    return {"execution_result": result.get("data", []), "messages": [AIMessage(content=str(result))]}
+    
+    

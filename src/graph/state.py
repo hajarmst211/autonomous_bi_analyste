@@ -6,7 +6,6 @@ class QueryAgentState(TypedDict):
     messages: Annotated[List[BaseMessage], operator.add] 
 
     user_question: str
-    error_history: Annotated[list[tuple[str, str]], operator.add]
     attempts: int
     db_schema: str
 

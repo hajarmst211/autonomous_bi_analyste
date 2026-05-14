@@ -35,4 +35,4 @@ inputs = {
 
 result = app.invoke(inputs)
 print(f"Generated SQL Query: {result['sql_query']}")
-print(f"Execution Result: {format_agent_output(result['messages'])}")
+print(f"Execution Result: {result['messages'][-1].content}")
