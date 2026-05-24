@@ -31,7 +31,7 @@ app = workflow.compile()
 
 
 inputs = {
-    "user_question": "How many employees are in London?",
+    "user_question": "How many customers do we have?",
     "messages": [HumanMessage(content="How many employees are in London?")],
     "attempts": 0
 }
